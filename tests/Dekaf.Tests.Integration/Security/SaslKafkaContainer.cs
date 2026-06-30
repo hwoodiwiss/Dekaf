@@ -28,8 +28,11 @@ public class SaslKafkaContainer : KafkaTestContainer
 
     /// <summary>
     /// Internal bootstrap server address used by kafka-configs.sh inside the container.
+    /// Uses the BROKER listener (port 9093) which is PLAINTEXT (no authentication required),
+    /// so kafka-configs.sh can run without SASL credentials.
+    /// Port 9092 (PLAINTEXT) is mapped to SASL_PLAINTEXT and requires authentication.
     /// </summary>
-    private const string InternalBootstrapServer = "localhost:9092";
+    private const string InternalBootstrapServer = "localhost:9093";
 
     // JAAS config for PLAIN mechanism on the external listener.
     // Defines both the broker's own credentials (for inter-broker if needed) and the user credentials.
@@ -56,10 +59,16 @@ public class SaslKafkaContainer : KafkaTestContainer
         // JAAS configuration for PLAIN on the external listener
         .WithEnvironment("KAFKA_LISTENER_NAME_PLAINTEXT_PLAIN_SASL_JAAS_CONFIG", PlainJaasConfig)
         // SCRAM JAAS configs for the listener (broker-side module with no predefined users;
-        // SCRAM users are added dynamically via kafka-configs.sh after startup)
-        .WithEnvironment("KAFKA_LISTENER_NAME_PLAINTEXT_SCRAM__SHA__256_SASL_JAAS_CONFIG",
+        // SCRAM users are added dynamically via kafka-configs.sh after startup).
+        //
+        // Triple underscore (___) is required to produce a hyphen (-) in the property key using the
+        // apache/kafka KafkaDockerWrapper env-var translation rules:
+        //   _ -> .   then   ... -> -   then   .. -> _
+        // So SCRAM___SHA___256 -> scram...sha...256 -> scram-sha-256
+        // matching the mechanism name "SCRAM-SHA-256" that Kafka 4.0 uses in loadServerContext.
+        .WithEnvironment("KAFKA_LISTENER_NAME_PLAINTEXT_SCRAM___SHA___256_SASL_JAAS_CONFIG",
             "org.apache.kafka.common.security.scram.ScramLoginModule required;")
-        .WithEnvironment("KAFKA_LISTENER_NAME_PLAINTEXT_SCRAM__SHA__512_SASL_JAAS_CONFIG",
+        .WithEnvironment("KAFKA_LISTENER_NAME_PLAINTEXT_SCRAM___SHA___512_SASL_JAAS_CONFIG",
             "org.apache.kafka.common.security.scram.ScramLoginModule required;");
 
     /// <summary>

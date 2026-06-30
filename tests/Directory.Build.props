@@ -3,7 +3,8 @@
 
   <PropertyGroup>
     <!-- Allow underscores in test method names -->
-    <NoWarn>$(NoWarn);CA1707</NoWarn>
+    <!-- Task.WhenAny with Task.Delay is acceptable in tests -->
+    <NoWarn>$(NoWarn);CA1707;CA2027</NoWarn>
     <!-- Enable new Microsoft Testing Platform experience -->
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
