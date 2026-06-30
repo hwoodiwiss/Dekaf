@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks.Sources;
+using Dekaf.Errors;
 using Dekaf.Internal;
 using Dekaf.Protocol;
 using Dekaf.Protocol.Messages;

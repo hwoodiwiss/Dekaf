@@ -503,6 +503,10 @@ public sealed partial class MetadataManager : IAsyncDisposable
             {
                 throw; // Permanent error — do not retry against another broker
             }
+            catch (AuthenticationException)
+            {
+                throw; // Permanent error — wrong credentials won't succeed on any broker
+            }
             catch (Exception ex)
             {
                 LogMetadataRefreshFailed(ex, host, port);
