@@ -1505,7 +1505,12 @@ public sealed partial class KafkaConnection : IKafkaConnection
 
             var authBytes = authenticator.GetInitialResponse();
 
-            while (!authenticator.IsComplete)
+            // Use do-while to guarantee at least one SaslAuthenticateRequest is sent.
+            // Single-round mechanisms (PLAIN, OAUTHBEARER) set IsComplete = true inside
+            // GetInitialResponse(), so a plain while loop would skip the body entirely,
+            // leaving the broker waiting for SaslAuthenticate and returning IllegalSaslState
+            // on the next request.
+            do
             {
                 var authResponse = await SendSaslMessageAsync<SaslAuthenticateRequest, SaslAuthenticateResponse>(
                     new SaslAuthenticateRequest { AuthBytes = authBytes },
@@ -1533,6 +1538,7 @@ public sealed partial class KafkaConnection : IKafkaConnection
 
                 authBytes = response;
             }
+            while (!authenticator.IsComplete);
         }
         finally
         {
